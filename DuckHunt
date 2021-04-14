@@ -1,0 +1,170 @@
+from turtle import *
+import random
+# from abc import *
+import math
+
+
+class LaserCannon(Turtle):
+    def __init__(self, speed1, xMin, xMax, yMin, yMax):
+        super().__init__()
+        self.speed = speed1
+        self.__xMin = xMin
+        self.__xMax = xMax
+        self.__yMin = yMin
+        self.__yMax = yMax
+        self.__screen = self.getscreen()
+        self.__screen.bgcolor('blue')
+        self.__screen.setworldcoordinates(xMin, yMin, xMax, yMax)
+        self.setheading(90)
+        self.up()
+        self.__screen.onclick(self.shoot)
+        self.__screen.onkey(self.quit, 'q')
+
+    def aim(self, x, y):
+        heading = self.towards(x, y)
+        self.setheading(heading)
+
+    def shoot(self, x, y):
+        ashot = Hit(x, y)
+        ashot.shot()
+
+    def quit(self):
+        self.screen.bye()
+
+    def keepScore(self):
+        print(Score())
+
+
+class BoundedTurtle(Turtle):
+    def __init__(self, speed = 10, xMin=-200, xMax=200, yMin=0, yMax=400):
+        super().__init__()
+        self.__xMin = xMin
+        self.__xMax = xMax
+        self.__yMin = yMin
+        self.__yMax = yMax
+        self.speed = speed
+
+    def outOfBounds(self):
+        xpos, ypos = self.position()
+        out = False
+        if xpos < self.__xMin or xpos > self.__xMax:
+            out = True
+        if ypos < self.__yMin or ypos > self.__yMax:
+            out = True
+        return out
+
+    def move(self):
+        xPos, yPos = self.pos()
+        oldH = self.heading()
+        newH = oldH
+
+        if xPos > (self.__xMax - 100) or xPos < (self.__xMin + 100):
+            newH = 180 - oldH
+        if yPos > (self.__yMax - 100) or yPos < (self.__yMin + 100):
+            newH = 360 - oldH
+        if newH != oldH:
+            self.setheading(newH)
+        self.forward(self.speed)
+        self.getscreen().ontimer(self.move, 200)
+
+    def remove(self):
+        self.hideturtle()
+
+
+class Drone(BoundedTurtle):
+    DroneList = []
+
+    @staticmethod
+    def getDrones():
+        return [x for x in Drone.DroneList if x.alive]
+
+    def __init__(self, speed, xMin, xMax, yMin, yMax):
+        super().__init__(speed, xMin, xMax, yMin, yMax)
+        self.getscreen().tracer(0)
+        self.up()
+        if 'drone.gif' not in self.getscreen().getshapes():
+            self.getscreen().addshape('drone.gif')
+        self.shape('drone.gif')
+        self.goto(random.randint(xMin + 100, xMax - 100), random.randint(yMin + 100, yMax - 100))
+        self.setheading(random.randint(0, 359))
+        self.getscreen().tracer(1)
+        Drone.DroneList = [x for x in Drone.DroneList if x.alive]
+        Drone.DroneList.append(self)
+        self.alive = True
+        self.getscreen().ontimer(self.move, 200)
+        # self.getscreen().ontimer(self.Hit, 5000)
+
+    def remove(self):
+        self.alive = False
+        self.hideturtle()
+
+
+class Hit(BoundedTurtle):
+    def __init__(self, x, y):
+        super().__init__()
+        self.getscreen().tracer(0)
+        self.up()
+        self.setx(x)
+        self.sety(y)
+
+    def shot(self):
+        for a in Drone.getDrones():
+            if self.distance(a, ) < 20:
+                a.remove()
+        self.hideturtle()
+
+    def distance(self, other, **kwargs):
+        p1 = self.position()
+        p2 = other.position()
+        a = p1[0] - p2[0]
+        b = p1[1] - p2[1]
+        dist = math.sqrt(a ** 2 + b ** 2)
+        return dist
+
+
+class Score(Turtle):
+    Gscore = 0
+    GhighScore = 0
+
+    def __init__(self):
+        super().__init__()
+        self.__score = 0
+        self.__highScore = 0
+        self.write("Score : {} High Score : {} ".format(self.__score, self.__highScore), align="center", font=
+        ("candara", 24, "bold"))
+
+    def addPoints(self, points):
+        self.__score += points
+        if self.__score > self.__highScore:
+            self.__highScore = self.__score
+
+    def getScore(self):
+        return self.__score
+
+    def getHighScore(self):
+        return self.__highScore
+
+
+class DroneInvaders:
+    def __init__(self, speed, xMin, xMax, yMin, yMax):
+        super().__init__()
+        self.__speed = speed
+        self.__xMin = xMin
+        self.__xMax = xMax
+        self.__yMin = yMin
+        self.__yMax = yMax
+
+    def play(self):
+        self.mainWin = LaserCannon(self.__speed, self.__xMin, self.__xMax, self.__yMin, self.__yMax).getscreen()
+        self.mainWin.ontimer(self.addDrone, 1000)
+        self.mainWin.listen()
+        mainloop()
+
+    def addDrone(self):
+        if len(Drone.getDrones()) < 2:
+            Drone(self.__speed, self.__xMin, self.__xMax, self.__yMin, self.__yMax)
+        self.mainWin.ontimer(self.addDrone, 1000)
+
+
+game = DroneInvaders(10, -200, 200, 0, 400)
+game.play()
