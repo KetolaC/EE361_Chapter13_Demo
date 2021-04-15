@@ -31,10 +31,6 @@ class LaserCannon(Turtle):
     def quit(self):
         self.screen.bye()
 
-    def keepScore(self):
-        print(Score())
-
-
 class BoundedTurtle(Turtle):
     def __init__(self, speed = 10, xMin=-200, xMax=200, yMin=0, yMax=400):
         super().__init__()
@@ -82,21 +78,22 @@ class Drone(BoundedTurtle):
         super().__init__(speed, xMin, xMax, yMin, yMax)
         self.getscreen().tracer(0)
         self.up()
-        if 'drone.gif' not in self.getscreen().getshapes():
-            self.getscreen().addshape('drone.gif')
-        self.shape('drone.gif')
+        if 'goose.gif' not in self.getscreen().getshapes():
+            self.getscreen().addshape('goose.gif')
+        self.shape('goose.gif')
         self.goto(random.randint(xMin + 100, xMax - 100), random.randint(yMin + 100, yMax - 100))
         self.setheading(random.randint(0, 359))
         self.getscreen().tracer(1)
         Drone.DroneList = [x for x in Drone.DroneList if x.alive]
         Drone.DroneList.append(self)
         self.alive = True
-        self.getscreen().ontimer(self.move, 200)
-        # self.getscreen().ontimer(self.Hit, 5000)
+        self.getscreen().ontimer(self.move, 100)
+        self.getscreen().ontimer(self.remove, 10000)
 
     def remove(self):
         self.alive = False
         self.hideturtle()
+        self.clear()
 
 
 class Hit(BoundedTurtle):
@@ -109,11 +106,13 @@ class Hit(BoundedTurtle):
 
     def shot(self):
         for a in Drone.getDrones():
-            if self.distance(a, ) < 20:
+            dist = self.distance(a)
+            if dist < 10:
                 a.remove()
         self.hideturtle()
 
-    def distance(self, other, **kwargs):
+
+    def distance(self, other):
         p1 = self.position()
         p2 = other.position()
         a = p1[0] - p2[0]
@@ -121,31 +120,7 @@ class Hit(BoundedTurtle):
         dist = math.sqrt(a ** 2 + b ** 2)
         return dist
 
-
-class Score(Turtle):
-    Gscore = 0
-    GhighScore = 0
-
-    def __init__(self):
-        super().__init__()
-        self.__score = 0
-        self.__highScore = 0
-        self.write("Score : {} High Score : {} ".format(self.__score, self.__highScore), align="center", font=
-        ("candara", 24, "bold"))
-
-    def addPoints(self, points):
-        self.__score += points
-        if self.__score > self.__highScore:
-            self.__highScore = self.__score
-
-    def getScore(self):
-        return self.__score
-
-    def getHighScore(self):
-        return self.__highScore
-
-
-class DroneInvaders:
+class GooseHunt:
     def __init__(self, speed, xMin, xMax, yMin, yMax):
         super().__init__()
         self.__speed = speed
@@ -166,5 +141,6 @@ class DroneInvaders:
         self.mainWin.ontimer(self.addDrone, 1000)
 
 
-game = DroneInvaders(10, -200, 200, 0, 400)
+game = GooseHunt(10, -200, 200, 0, 400)
 game.play()
+
