@@ -1,12 +1,11 @@
 import turtle
-import time
-from DroneInvaders import *
-#from HalfLife3 import HalfLife3
-#from SnakeGamePlay import *
-
 
 class ArcadeMachine:
     turtleList = []
+    game = None
+
+    def getGame(self):
+        return ArcadeMachine.game
 
     def __init__(self):
         self.x, self.y = 0, 0
@@ -18,22 +17,32 @@ class ArcadeMachine:
         self.arcadeWin.setworldcoordinates(0, 0, 100, 100)
         self.arcadeWin.bgcolor('black')
         self.showGames()
-        self.canvas = turtle.getcanvas()
-        self.canvas.bind('<Motion>', self.motion)
+        self.arcadeWin.onkey(self.gameUp, 'w')
+        self.arcadeWin.onkey(self.gameDown, 's')
         self.pxcept = 0
         self.xcept = 0
-        # self.arcadeWin.onclick(self.selectGame())
+        self.arcadeWin.onkey(self.quit, 'i')
 
     def getScreen(self):
         return self.arcadeWin
 
-    def getCanvas(self):
-        return self.canvas
+    def quit(self):
+        self.arcadeWin.bye()
+        # self.arcadeWin.getcanvas().destroy()
 
-    def motion(self, event):
-        self.x, self.y = event.x, event.y
+    def gameUp(self):
+        if self.xcept == 0 or self.xcept == 1:
+            self.xcept = 4  #For initial screen
+        else:
+            self.xcept = self.xcept - 1
         self.selectGame()
-        print('{}, {}'.format(self.x, self.y))
+
+    def gameDown(self):
+        if self.xcept == 4:
+            self.xcept = 1  #For last game on list
+        else:
+            self.xcept = self.xcept + 1
+        self.selectGame()
 
     def showGames(self, exception = 6):
         x = 1
@@ -48,31 +57,21 @@ class ArcadeMachine:
             x += 1
 
     def selectGame(self):
-        if 100 < self.y < 200:
-            self.xcept = 1
-        elif 200 < self.y < 300:
-            self.xcept = 2
-        elif 300 < self.y < 400:
-            self.xcept = 3
-        elif 400 < self.y < 500:
-            self.xcept = 4
         if self.pxcept != self.xcept:
             ArcadeMachine.turtleList[self.xcept].color('green')
             ArcadeMachine.turtleList[self.xcept].write(self.games[self.xcept], align="left", font=("Pixel NES", 40, "normal"))
             self.showGames(self.xcept)
+            if self.xcept == 1:
+                ArcadeMachine.game = DroneInvaders(-200, 200, 0, 400)
+            elif self.xcept == 2:
+                ArcadeMachine.game = None # Will place Duck Hunt here
+            if self.xcept == 3:
+                ArcadeMachine.game = None #SnakeGame()
+            if self.xcept == 4:
+                ArcadeMachine.game = playHL3()
         self.pxcept = self.xcept
+        print(ArcadeMachine.game)
 
-
-arcade0 = ArcadeMachine()
-canvas0 = arcade0.getCanvas()
-arcadeWin0 = arcade0.getScreen()
-arcadeWin0.listen()
-mainloop()
-
-# turtle.exitonclick()
-
-#game = DroneInvaders(-200, 200, 0, 400)
-#game = SnakeGamePlay()
-#game = HalfLife3()
-#game.play()
-
+    def use(self):
+        self.arcadeWin.listen()
+        turtle.mainloop()
