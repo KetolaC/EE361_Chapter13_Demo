@@ -2,6 +2,7 @@ from turtle import *
 import random
 from abc import *
 import math
+import sys
 
 class LaserCannon(Turtle):
     def __init__(self, xMin, xMax, yMin, yMax):
@@ -36,6 +37,7 @@ class LaserCannon(Turtle):
 
     def quit(self):
         self.screen.bye()
+        print("highscore: ", Score.getHighScore())
 
     def keepScore(self):
         print(Score())
@@ -69,6 +71,7 @@ class BoundedTurtle(Turtle):
 
     def remove(self):
         self.hideturtle()
+        self.clear()
 
 
 class Drone(BoundedTurtle):
@@ -96,6 +99,7 @@ class Drone(BoundedTurtle):
     def remove(self):
         self.alive = False
         self.hideturtle()
+        self.clear()
 
 
 class Bomb(BoundedTurtle):
@@ -120,9 +124,13 @@ class Bomb(BoundedTurtle):
         self.forward(self.speed)
         for i in Drone.getDrones():
             if self.distance(i) < 20:
-                i.remove()
                 exploded = True
-        if self.outOfBounds() or exploded:
+                i.remove()
+        if self.outOfBounds():
+            self.remove()
+        if exploded:
+            Score.score += 10
+            print("Score: ", Score.score)
             self.remove()
         else:
             self.getscreen().ontimer(self.move, 100)
@@ -138,8 +146,14 @@ class Bomb(BoundedTurtle):
 
 class Score(Turtle):
 
-    Gscore = 0
-    GhighScore = 0
+    score = 0
+    highScore = 0
+
+    @staticmethod
+    def getHighScore():
+        if Score.score > Score.highScore:
+            Score.highScore = Score.score
+        return Score.highScore
 
     def __init__(self):
         super().__init__()
@@ -149,15 +163,13 @@ class Score(Turtle):
         ("candara", 24, "bold"))
 
     def addPoints(self, points):
-        self.__score += points
-        if self.__score > self.__highScore:
-            self.__highScore = self.__score
+        Score.score += points
+        if Score.score > Score.highScore:
+            Score.highScore = Score.score
 
     def getScore(self):
-        return self.__score
+        return Score.score
 
-    def getHighScore(self):
-        return self.__highScore
 
 
 
@@ -180,5 +192,7 @@ class DroneInvaders:
             Drone(1, self.__xMin, self.__xMax, self.__yMin, self.__yMax)
         self.mainWin.ontimer(self.addDrone, 1000)
 
-game = DroneInvaders(-200, 200, 0, 400)
-game.play()
+
+if __name__ == '__main__':
+    game = DroneInvaders(-200, 200, 0, 400)
+    game.play()
